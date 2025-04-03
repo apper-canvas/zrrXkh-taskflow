@@ -89,6 +89,15 @@ function Home() {
     setTasks(prevTasks => [...prevTasks, newTask])
   }
   
+  // Edit a task
+  const editTask = (updatedTask) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    )
+  }
+  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Sidebar */}
@@ -177,6 +186,7 @@ function Home() {
           onToggleCompletion={toggleTaskCompletion}
           onDeleteTask={deleteTask}
           onAddTask={addTask}
+          onEditTask={editTask}
           categories={categories.filter(c => c.id !== 'all')}
         />
       </motion.div>

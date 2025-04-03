@@ -10,12 +10,15 @@ import {
   Flag, 
   AlertTriangle,
   CheckCircle2,
-  Clock
+  Clock,
+  Edit
 } from 'lucide-react'
 import { format } from 'date-fns'
 
-function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categories }) {
+function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, onEditTask, categories }) {
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -24,7 +27,7 @@ function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categ
     categoryId: categories[0]?.id || 'work'
   })
   const [formErrors, setFormErrors] = useState({})
-
+  
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -36,15 +39,33 @@ function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categ
     }
   }
 
+  // Handle edit input changes
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target
+    setEditingTask(prev => ({ ...prev, [name]: value }))
+    
+    // Clear error for this field if it exists
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  // Open edit form with task data
+  const openEditForm = (task) => {
+    setEditingTask(task)
+    setIsEditFormOpen(true)
+    setFormErrors({})
+  }
+
   // Validate form
-  const validateForm = () => {
+  const validateForm = (task) => {
     const errors = {}
     
-    if (!newTask.title.trim()) {
+    if (!task.title.trim()) {
       errors.title = "Task title is required"
     }
     
-    if (!newTask.dueDate) {
+    if (!task.dueDate) {
       errors.dueDate = "Due date is required"
     }
     
@@ -56,7 +77,7 @@ function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categ
   const handleSubmit = (e) => {
     e.preventDefault()
     
-    if (!validateForm()) return
+    if (!validateForm(newTask)) return
     
     const taskToAdd = {
       ...newTask,
@@ -76,6 +97,16 @@ function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categ
     })
     
     setIsFormOpen(false)
+  }
+
+  // Handle edit form submission
+  const handleEditSubmit = (e) => {
+    e.preventDefault()
+    
+    if (!validateForm(editingTask)) return
+    
+    onEditTask(editingTask)
+    setIsEditFormOpen(false)
   }
 
   // Get priority icon
@@ -249,6 +280,144 @@ function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categ
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Task Form Modal */}
+      <AnimatePresence>
+        {isEditFormOpen && editingTask && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setIsEditFormOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-surface-800 rounded-xl shadow-soft max-w-md w-full p-6"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Edit Task</h2>
+                <button 
+                  onClick={() => setIsEditFormOpen(false)}
+                  className="p-1 rounded-full hover:bg-surface-100 dark:hover:bg-surface-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleEditSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="edit-title" className="block text-sm font-medium mb-1">
+                      Task Title <span className="text-accent">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-title"
+                      name="title"
+                      value={editingTask.title}
+                      onChange={handleEditInputChange}
+                      className={`input ${formErrors.title ? 'border-accent' : ''}`}
+                      placeholder="What needs to be done?"
+                    />
+                    {formErrors.title && (
+                      <p className="mt-1 text-sm text-accent">{formErrors.title}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="edit-description" className="block text-sm font-medium mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      id="edit-description"
+                      name="description"
+                      value={editingTask.description}
+                      onChange={handleEditInputChange}
+                      className="input min-h-[80px]"
+                      placeholder="Add details about this task..."
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="edit-dueDate" className="block text-sm font-medium mb-1">
+                        Due Date <span className="text-accent">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        id="edit-dueDate"
+                        name="dueDate"
+                        value={editingTask.dueDate}
+                        onChange={handleEditInputChange}
+                        className={`input ${formErrors.dueDate ? 'border-accent' : ''}`}
+                      />
+                      {formErrors.dueDate && (
+                        <p className="mt-1 text-sm text-accent">{formErrors.dueDate}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="edit-priority" className="block text-sm font-medium mb-1">
+                        Priority
+                      </label>
+                      <select
+                        id="edit-priority"
+                        name="priority"
+                        value={editingTask.priority}
+                        onChange={handleEditInputChange}
+                        className="input"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="edit-categoryId" className="block text-sm font-medium mb-1">
+                      Category
+                    </label>
+                    <select
+                      id="edit-categoryId"
+                      name="categoryId"
+                      value={editingTask.categoryId}
+                      onChange={handleEditInputChange}
+                      className="input"
+                    >
+                      {categories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditFormOpen(false)}
+                    className="btn btn-outline flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary flex-1"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Task List */}
       {tasks.length === 0 ? (
@@ -337,13 +506,22 @@ function MainFeature({ tasks, onToggleCompletion, onDeleteTask, onAddTask, categ
                     </div>
                   </div>
                   
-                  <button
-                    onClick={() => onDeleteTask(task.id)}
-                    className="flex-shrink-0 p-1.5 text-surface-400 hover:text-accent rounded-full hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
-                    aria-label="Delete task"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="flex flex-shrink-0">
+                    <button
+                      onClick={() => openEditForm(task)}
+                      className="flex-shrink-0 p-1.5 text-surface-400 hover:text-primary rounded-full hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors mr-1"
+                      aria-label="Edit task"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => onDeleteTask(task.id)}
+                      className="flex-shrink-0 p-1.5 text-surface-400 hover:text-accent rounded-full hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                      aria-label="Delete task"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               </motion.li>
             ))}
