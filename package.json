@@ -15,7 +15,9 @@
     "react-router-dom": "^6.15.0",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.344.0",
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.1.0",
+    "apexcharts": "^3.44.0",
+    "react-apexcharts": "^1.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

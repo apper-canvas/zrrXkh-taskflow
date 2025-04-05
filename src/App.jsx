@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { Sun, Moon } from 'lucide-react'
+import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Sun, Moon, BarChart4, Home as HomeIcon } from 'lucide-react'
 import Home from './pages/Home'
+import Analytics from './pages/Analytics'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -10,6 +11,8 @@ function App() {
     return savedMode ? JSON.parse(savedMode) : 
       window.matchMedia('(prefers-color-scheme: dark)').matches
   })
+  
+  const location = useLocation()
 
   useEffect(() => {
     if (darkMode) {
@@ -37,19 +40,47 @@ function App() {
             </h1>
           </div>
           
-          <button 
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          <div className="flex items-center space-x-4">
+            <nav className="flex items-center space-x-1">
+              <Link 
+                to="/" 
+                className={`p-2 rounded-lg flex items-center ${
+                  location.pathname === '/' 
+                    ? 'bg-primary/10 text-primary dark:bg-primary/20' 
+                    : 'hover:bg-surface-100 dark:hover:bg-surface-800'
+                }`}
+              >
+                <HomeIcon size={20} className="mr-1" />
+                <span className="hidden sm:inline">Home</span>
+              </Link>
+              <Link 
+                to="/analytics" 
+                className={`p-2 rounded-lg flex items-center ${
+                  location.pathname === '/analytics' 
+                    ? 'bg-primary/10 text-primary dark:bg-primary/20' 
+                    : 'hover:bg-surface-100 dark:hover:bg-surface-800'
+                }`}
+              >
+                <BarChart4 size={20} className="mr-1" />
+                <span className="hidden sm:inline">Analytics</span>
+              </Link>
+            </nav>
+            
+            <button 
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </div>
       </header>
       
       <main className="container mx-auto px-4 py-6">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
