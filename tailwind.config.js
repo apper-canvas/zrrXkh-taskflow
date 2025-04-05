@@ -28,7 +28,8 @@ export default {
           600: '#475569',  // Added
           700: '#334155',  // Added
           800: '#1e293b',  // Added
-          900: '#0f172a'   // Darkest
+          900: '#0f172a',  // Darkest
+          950: '#09090b'   // Added the missing 950 value
         }      
       },
       fontFamily: {
