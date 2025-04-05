@@ -1,9 +1,33 @@
-import { useMemo } from 'react'
-import Chart from 'react-apexcharts'
+import { useMemo, useState, useEffect } from 'react'
 import { format, eachDayOfInterval, parseISO, differenceInDays, isSameDay, isSameWeek, isSameMonth } from 'date-fns'
 import { LineChart } from 'lucide-react'
 
 function ProductivityTrendChart({ tasks, dateRange, dateRangeType }) {
+  const [chartComponent, setChartComponent] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load ApexCharts dynamically on client-side only
+  useEffect(() => {
+    let isMounted = true;
+    const loadChart = async () => {
+      try {
+        const ApexCharts = await import('react-apexcharts');
+        if (isMounted) {
+          setChartComponent(() => ApexCharts.default);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading ApexCharts:', error);
+        setLoading(false);
+      }
+    };
+
+    loadChart();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Generate appropriate intervals based on date range type
   const intervals = useMemo(() => {
     if (dateRangeType === 'day') {
@@ -199,6 +223,23 @@ function ProductivityTrendChart({ tasks, dateRange, dateRangeType }) {
     }
   };
 
+  // Show a loading state when the chart is loading
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3 className="text-lg font-semibold mb-2 flex items-center">
+          <LineChart size={20} className="mr-2 text-primary" />
+          Productivity Trend
+        </h3>
+        <div className="h-[350px] flex items-center justify-center">
+          <p className="text-center text-surface-500 dark:text-surface-400">
+            Loading chart...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // If no tasks, show empty state
   if (tasks.length === 0) {
     return (
@@ -226,12 +267,14 @@ function ProductivityTrendChart({ tasks, dateRange, dateRangeType }) {
         Monitor your productivity patterns over time.
       </p>
       <div>
-        <Chart
-          options={options}
-          series={series}
-          type="area"
-          height={350}
-        />
+        {chartComponent && (
+          <chartComponent
+            options={options}
+            series={series}
+            type="area"
+            height={350}
+          />
+        )}
       </div>
     </div>
   );
